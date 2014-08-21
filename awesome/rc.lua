@@ -49,10 +49,12 @@ themes_dir = (config_dir .. "/powerarrowf")
 beautiful.init(themes_dir .. "/theme.lua")
 
 -- This is used later as the default terminal, browser and editor to run.
-terminal = "termite"
+terminal = "xterm -ls"
 editor = os.getenv("EDITOR") or "vim"
 editor_cmd = terminal .. " -e " .. editor
-browser = "chromium"
+browser = "firefox"
+
+font = "Inconsolata 11"
 
 
 -- {{ Powerarrow-dark separators }} --
@@ -73,18 +75,18 @@ modkey = "Mod4"
 -- Table of layouts to cover with awful.layout.inc, order matters.
 local layouts =
 {
-    awful.layout.suit.floating,
     awful.layout.suit.tile,
     awful.layout.suit.tile.left,
     awful.layout.suit.tile.bottom,
     awful.layout.suit.tile.top,
+    awful.layout.suit.floating,
 }
 -- }}}
 
 -- {{{ Wallpaper
 if beautiful.wallpaper then
     for s = 1, screen.count() do
-        gears.wallpaper.maximized(beautiful.wallpaper, s, true)
+        gears.wallpaper.maximized(beautiful.wallpaper, s, false)
     end
 end
 -- }}}
@@ -94,7 +96,7 @@ end
 tags = {}
 for s = 1, screen.count() do
     -- Each screen has its own tag table.
-    tags[s] = awful.tag({ 1, 2, 3}, s, layouts[1])
+    tags[s] = awful.tag({ 1, 2, 3, 4, 5, 6}, s, layouts[1])
 end
 -- }}}
 
@@ -112,7 +114,8 @@ mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesom
                                   }
                         })
 
-mylauncher = awful.widget.launcher({ menu = mymainmenu })
+mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
+                                     menu = mymainmenu })
 
 -- Menubar configuration
 menubar.utils.terminal = terminal -- Set the terminal for applications that require it
@@ -124,47 +127,11 @@ mytextclock = awful.widget.textclock()
 
 --{{-- Time and Date Widget }} --
 tdwidget = wibox.widget.textbox()
-vicious.register(tdwidget, vicious.widgets.date, '<span font="Inconsolata 11" color="#AAAAAA" background="#1F2428"> %b %d %I:%M </span>', 20)
+local strf = '<span font="' .. font .. '" color="#AAAAAA" background="#313131">%b %d %H:%M:%S</span>'
+vicious.register(tdwidget, vicious.widgets.date, strf, 20)
 
 clockicon = wibox.widget.imagebox()
 clockicon:set_image(beautiful.clock)
-
---{{ Battery Widget }} --
-
-batwidget = wibox.widget.textbox()
-vicious.register(batwidget, vicious.widgets.bat, '<span font="Inconsolata 11" color="#AAAAAA" background="#1F2428">$1$2% </span>', 30, "BAT0")
-
-baticon = wibox.widget.imagebox()
-baticon:set_image(beautiful.ac)
---{{ Net Widget }} --
-
-netwidget = wibox.widget.textbox()
-neticon = wibox.widget.imagebox()
-
-vicious.register(netwidget, vicious.widgets.net, function(widgets,args)
-        local interface = ""
-        if args["{wlp2s0 carrier}"] == 1 then
-                interface = "wlp2s0"
-        elseif args["{enp0s25 carrier}"] == 1 then
-                interface = "enp0s25"
-        else
-                return ""
-        end
-        return '<span font="Inconsolata 11" color="#AAAAAA" background="#313131">' ..args["{"..interface.." down_kb}"]..'kbps'..'</span>' end, 10)
-netwidget:buttons(awful.util.table.join(awful.button({ }, 1, function() awful.util.spawn_with_shell('wicd-client -n') end)))
-
-
----{{---| Wifi Signal Widget |-------
-vicious.register(neticon, vicious.widgets.wifi, function(widget, args)
-    local sigstrength = tonumber(args["{link}"])
-    if sigstrength > 69 then
-        neticon:set_image(beautiful.nethigh)
-    elseif sigstrength > 40 and sigstrength < 70 then
-        neticon:set_image(beautiful.netmedium)
-    else
-        neticon:set_image(beautiful.netlow)
-    end
-end, 120, 'wlp2s0')
 
 -- {{ Volume Widget }} --
 
@@ -201,15 +168,6 @@ vicious.register(cpuwidget, vicious.widgets.cpu,
 
 cpuicon = wibox.widget.imagebox()
 cpuicon:set_image(beautiful.cpu)
-
---{{---| File Size widget |-----
-fswidget = wibox.widget.textbox()
-
-vicious.register(fswidget, vicious.widgets.fs,
-'<span background="#313131" font="Inconsolata 11"> <span font="Inconsolata 11" color="#AAAAAA">${/home used_p}/${/home avail_p} GB </span></span>', 800)
-
-fsicon = wibox.widget.imagebox()
-fsicon:set_image(beautiful.hdd)
 
 -- {{ GMail Widget }} --
 mailicon = wibox.widget.imagebox()
@@ -312,15 +270,6 @@ for s = 1, screen.count() do
     right_layout:add(volumeicon)
     right_layout:add(volume)
     right_layout:add(arrl_ld)
-    right_layout:add(fsicon)
-    right_layout:add(fswidget)
-    right_layout:add(arrl_dl)
-    right_layout:add(baticon)
-    right_layout:add(batwidget)
-    right_layout:add(arrl_ld)
-    right_layout:add(neticon)
-    right_layout:add(netwidget)
-    right_layout:add(arrl_dl)
     right_layout:add(clockicon)
     right_layout:add(tdwidget)
     right_layout:add(arrl_ld)
@@ -441,11 +390,14 @@ awful.key({     }, "XF86AudioMute", function() awful.util.spawn("amixer set Mast
 
 clientkeys = awful.util.table.join(
     awful.key({ modkey,           }, "f",      function (c) c.fullscreen = not c.fullscreen  end),
-    awful.key({ modkey,           }, "q",      function (c) c:kill()                         end),
+    awful.key({ modkey, "Shift"   }, "c",      function (c) c:kill()                         end),
     awful.key({ modkey, "Control" }, "space",  awful.client.floating.toggle                     ),
     awful.key({ modkey, "Control" }, "Return", function (c) c:swap(awful.client.getmaster()) end),
     awful.key({ modkey,           }, "o",      awful.client.movetoscreen                        ),
     awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end),
+    awful.key({ }, "#127",      function () awful.util.spawn("xscreensaver-command -lock") end),
+    awful.key({ }, "#107",      function () awful.util.spawn("scrot /home/pete/screenshots/%Y-%m-%d_%H:%M_$wx$h.png") end),
+    awful.key({ "Shift" }, "#107",      function () awful.util.spawn("scrot -u /home/pete/screenshots/%Y-%m-%d_%H:%M_$wx$h.png") end),
     awful.key({ modkey,           }, "n",
         function (c)
             -- The client currently has the input focus, so it cannot be
@@ -608,12 +560,14 @@ function run_once(cmd)
 end
 
 -- {{ I need redshift to save my eyes }} -
-run_once("redshift -l 49.26:-123.23")
+run_once("redshift -l 50.84:-0.13")
+run_once("setxkbmap gb")
 awful.util.spawn_with_shell("xmodmap ~/.speedswapper")
 
 -- {{ Turns off the terminal bell }} --
 awful.util.spawn_with_shell("/usr/bin/xset b off")
 
+awful.util.spawn_with_shell("xscreensaver -no-splash")
 client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
 client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}

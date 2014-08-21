@@ -4,6 +4,9 @@
 
 theme = {}
 
+
+theme.awesome_icon = "/usr/share/awesome/themes/default/submenu.png"
+
 -- Setup Paths 
 pathToConfig = os.getenv("HOME") .. "/.config/awesome/"
 
@@ -71,7 +74,7 @@ theme.titlebar_maximized_button_focus_inactive  = "/usr/share/awesome/themes/def
 theme.titlebar_maximized_button_normal_active = "/usr/share/awesome/themes/default/titlebar/maximized_normal_active.png"
 theme.titlebar_maximized_button_focus_active  = "/usr/share/awesome/themes/default/titlebar/maximized_focus_active.png"
 
-theme.wallpaper = pathToConfig .. "powerarrowf/darkwood.png"
+theme.wallpaper = os.getenv('HOME') .. "/Downloads/m42_HLAvillaverde_2235.jpg"
 
 -- You can use your own layout icons like this:
 theme.layout_floating  = pathToConfig .. "powerarrowf/layouts/floating.png"
